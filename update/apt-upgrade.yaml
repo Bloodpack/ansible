@@ -5,7 +5,7 @@
   tasks:
     - name: update apt packages
       apt:
-        upgrade: yes
+        upgrade: dist
         update_cache: yes
 
     - name: Check if a reboot is required.
