@@ -14,6 +14,9 @@
         path: /var/run/reboot-required
         get_md5: no
       register: reboot_required_file
+    - debug:
+        msg: "Reboot is required"
+      when: reboot_required.stat.exists
       
     - name: Remove dependencies that are no longer required.
       ansible.builtin.apt:
