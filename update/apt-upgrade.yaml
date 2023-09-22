@@ -9,9 +9,8 @@
         upgrade: dist
         update_cache: true
     - name: Check if a reboot is required.
-      ansible.builtin.stat:
+      stat:
         path: /var/run/reboot-required
-        get_md5: no
       register: reboot_required
     - debug:
         msg: "Reboot is required"
