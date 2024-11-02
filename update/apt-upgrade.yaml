@@ -1,20 +1,38 @@
 ---
 - hosts: all
-
   become: true
   tasks:
-    - name: update apt packages
+    - name: Update apt packages
       apt:
         force_apt_get: true
-        upgrade: dist
+        upgrade: yes  # Perform a regular upgrade
         update_cache: true
-    - name: Check if a reboot is required.
+      register: update_result  # Register the result of the update task
+
+    - name: Check if a reboot is required
       stat:
         path: /var/run/reboot-required
       register: reboot_required
-    - debug:
+
+    - name: Notify if reboot is required
+      debug:
         msg: "Reboot is required"
       when: reboot_required.stat.exists
-    - name: Remove dependencies that are no longer required.
-      ansible.builtin.apt:
+
+    - name: Remove dependencies that are no longer required
+      apt:
         autoremove: true
+
+    - name: Notify that the update process is finished
+      debug:
+        msg: "Update process completed successfully."
+
+    - name: Check if the update was successful
+      debug:
+        msg: "Update was successful."
+      when: update_result.changed  # Check if any changes were made during the update
+
+    - name: Check if the update failed
+      debug:
+        msg: "Update failed."
+      when: not update_result.changed
