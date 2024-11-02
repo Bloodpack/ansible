@@ -44,9 +44,7 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        json:  # Use the json parameter to send data as JSON
-          chat_id: "{{ chat_id }}"
-          text: "Update process completed successfully on {{ inventory_hostname }}."
+        body: '{{ {"chat_id": chat_id, "text": "Update process completed successfully on " + inventory_hostname} | to_json }}'
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -63,9 +61,7 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        json:  # Use the json parameter to send data as JSON
-          chat_id: "{{ chat_id }}"
-          text: "No updates were made on {{ inventory_hostname }}."
+        body: '{{ {"chat_id": chat_id, "text": "No updates were made on " + inventory_hostname} | to_json }}'
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -77,4 +73,3 @@
       debug:
         var: telegram_response_failure
       when: not update_result.changed
-
