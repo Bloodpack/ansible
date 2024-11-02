@@ -60,11 +60,6 @@
         return_content: yes  # Capture the response
       when: held_back_updates.stdout | length > 0
 
-    - name: Debug before sending Telegram messages
-      debug:
-        msg: "Attempting to send appropriate message to Telegram"
-      when: update_result.changed or not update_result.upgraded
-
     - name: Send success message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
@@ -86,7 +81,7 @@
           Content-Type: "application/json"
         return_content: yes  # Capture the response
       register: telegram_response_no_updates
-      when: not update_result.changed and not update_result.upgraded
+      when: not update_result.changed and held_back_updates.stdout | length == 0
       check_mode: no  # Prevent skipping in check mode
 
     - name: Send no updates made message to Telegram
@@ -98,7 +93,7 @@
           Content-Type: "application/json"
         return_content: yes  # Capture the response
       register: telegram_response_no_updates_made
-      when: not update_result.changed and update_result.upgraded
+      when: not update_result.changed and held_back_updates.stdout | length > 0
       check_mode: no  # Prevent skipping in check mode
 
     - name: Debug Telegram responses
@@ -109,10 +104,9 @@
     - name: Debug Telegram no updates available response
       debug:
         var: telegram_response_no_updates
-      when: not update_result.changed and not update_result.upgraded
+      when: not update_result.changed and held_back_updates.stdout | length == 0
 
     - name: Debug Telegram no updates made response
       debug:
         var: telegram_response_no_updates_made
-      when: not update_result.changed and update_result.upgraded
-
+      when: not update_result.changed and held_back_updates.stdout | length > 0
