@@ -2,7 +2,7 @@
 - hosts: all
   become: true
   vars_files:
-    - /root/secrets.yml
+    - /root/secrets.yaml
 
   tasks:
     - name: Update apt packages
