@@ -73,7 +73,9 @@
       check_mode: no  # Prevent skipping in check mode
 
     - name: Get current time in Europe/Berlin timezone
-      command: date +"%Y-%m-%d %H:%M:%S %Z" -d "TZ=\"Europe/Berlin\""
+      command: date +"%Y-%m-%d %H:%M:%S %Z" 
+      environment:
+        TZ: "Europe/Berlin"
       register: berlin_time
 
     - name: Set message for no updates available
