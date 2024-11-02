@@ -35,6 +35,14 @@
         msg: "Update was successful."
       when: update_result.changed  # Check if any changes were made during the update
 
+    - name: Debug telegram_token
+      ansible.builtin.debug:
+        var: telegram_token
+
+    - name: Debug chat_id
+      ansible.builtin.debug:
+        var: chat_id
+
     - name: Send success message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
@@ -58,21 +66,3 @@
           Content-Type: "application/json"
         status_code: 200
       when: not update_result.changed
-
-    - name: Send success message to Telegram
-      uri:
-        url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
-        method: POST
-        body: 
-          chat_id: "{{ chat_id }}"
-          text: "Update process completed successfully on {{ inventory_hostname }}."
-        headers:
-          Content-Type: "application/json"
-        status_code: 200
-      register: telegram_response  # Register the response
-      when: update_result.changed
-
-    - name: Debug Telegram response
-      ansible.builtin.debug:
-        var: telegram_response
-      when: update_result.changed
