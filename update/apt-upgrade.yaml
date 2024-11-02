@@ -72,9 +72,13 @@
       when: update_result.changed
       check_mode: no  # Prevent skipping in check mode
 
+    - name: Get current time in Europe/Berlin timezone
+      command: date +"%Y-%m-%d %H:%M:%S %Z" -d "TZ=\"Europe/Berlin\""
+      register: berlin_time
+
     - name: Set message for no updates available
       set_fact:
-        no_updates_message: "*{{ (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ')).astimezone('Europe/Berlin').strftime('%Y-%m-%d %H:%M:%S %Z') }}*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"
+        no_updates_message: "*{{ berlin_time.stdout }}*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"
       when: not update_result.changed and held_back_updates.stdout | length == 0
 
     - name: Send no updates available message to Telegram
@@ -99,5 +103,3 @@
       register: telegram_response_no_updates_made
       when: not update_result.changed and held_back_updates.stdout | length > 0
       check_mode: no  # Prevent skipping in check mode
-
-
