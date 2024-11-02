@@ -81,32 +81,5 @@
           Content-Type: "application/json"
         return_content: yes  # Capture the response
       register: telegram_response_no_updates
-      when: not update_result.changed and held_back_updates.stdout | length == 0
-      check_mode: no  # Prevent skipping in check mode
+      when:
 
-    - name: Send no updates made message to Telegram
-      uri:
-        url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
-        method: POST
-        body: '{{ {"chat_id": chat_id, "text": "❌ No updates were made on *" + ansible_hostname + "*"} | to_json }}'
-        headers:
-          Content-Type: "application/json"
-        return_content: yes  # Capture the response
-      register: telegram_response_no_updates_made
-      when: not update_result.changed and held_back_updates.stdout | length > 0
-      check_mode: no  # Prevent skipping in check mode
-
-    - name: Debug Telegram responses
-      debug:
-        var: telegram_response_success
-      when: update_result.changed
-
-    - name: Debug Telegram no updates available response
-      debug:
-        var: telegram_response_no_updates
-      when: not update_result.changed and held_back_updates.stdout | length == 0
-
-    - name: Debug Telegram no updates made response
-      debug:
-        var: telegram_response_no_updates_made
-      when: not update_result.changed and held_back_updates.stdout | length > 0
