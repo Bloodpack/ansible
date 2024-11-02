@@ -44,7 +44,7 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: 
+        json:  # Use the json parameter to send data as JSON
           chat_id: "{{ chat_id }}"
           text: "Update process completed successfully on {{ inventory_hostname }}."
         headers:
@@ -63,7 +63,7 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: 
+        json:  # Use the json parameter to send data as JSON
           chat_id: "{{ chat_id }}"
           text: "No updates were made on {{ inventory_hostname }}."
         headers:
