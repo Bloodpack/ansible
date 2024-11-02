@@ -44,7 +44,7 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "Update process completed successfully on " + ansible_hostname} | to_json }}'
+        body: '{{ {"chat_id": chat_id, "text": "✅ Update process completed successfully on *" + ansible_hostname + "*"} | to_json }}'
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -61,15 +61,10 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "No updates were made on " + ansible_hostname} | to_json }}'
+        body: '{{ {"chat_id": chat_id, "text": "❌ No updates were made on *" + ansible_hostname + "*"} | to_json }}'
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
       register: telegram_response_failure
       when: not update_result.changed
       check_mode: no  # Prevent skipping in check mode
-
-    - name: Debug Telegram failure response
-      debug:
-        var: telegram_response_failure
-      when: not update_result.changed
