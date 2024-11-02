@@ -74,7 +74,7 @@
 
     - name: Set message for no updates available
       set_fact:
-        no_updates_message: "*{{ ansible_date_time.iso8601 }}*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"
+        no_updates_message: "*{{ (ansible_date_time.iso8601 | to_datetime('%Y-%m-%dT%H:%M:%SZ')).strftime('%Y-%m-%d %H:%M:%S') }} CET*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"
       when: not update_result.changed and held_back_updates.stdout | length == 0
 
     - name: Send no updates available message to Telegram
