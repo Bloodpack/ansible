@@ -15,7 +15,7 @@
       register: reboot_required
 
     - name: Notify if reboot is required
-      debug:
+      ansible.builtin.debug:
         msg: "Reboot is required"
       when: reboot_required.stat.exists
 
@@ -24,15 +24,15 @@
         autoremove: true
 
     - name: Notify that the update process is finished
-      debug:
+      ansible.builtin.debug:
         msg: "Update process completed successfully."
 
     - name: Check if the update was successful
-      debug:
+      ansible.builtin.debug:
         msg: "Update was successful."
       when: update_result.changed  # Check if any changes were made during the update
 
     - name: Check if the update failed
-      debug:
+      ansible.builtin.debug:
         msg: "Update failed."
       when: not update_result.changed
