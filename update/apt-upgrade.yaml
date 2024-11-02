@@ -48,7 +48,7 @@
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
         body: 
-          chat_id: "{{ chat_id }}"
+          chat_id: {{ chat_id }}
           text: "Update process completed successfully on {{ inventory_hostname }}."
         headers:
           Content-Type: "application/json"
