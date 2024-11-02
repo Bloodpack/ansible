@@ -72,16 +72,20 @@
       when: update_result.changed
       check_mode: no  # Prevent skipping in check mode
 
+    - name: Set message for no updates available
+      set_fact:
+        no_updates_message: "*{{ ansible_date_time.iso8601 }}*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"
+      when: not update_result.changed and held_back_updates.stdout | length == 0
+
     - name: Send no updates available message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "*{{ ansible_date_time.iso8601 }}*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"} | to_json }}'
+        body: '{{ {"chat_id": chat_id, "text": no_updates_message | to_json }}'
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
-      register: telegram_response_no_updates
-      when: not update_result.changed and held_back_updates.stdout | length == 0
+      when: no_updates_message is defined
       check_mode: no  # Prevent skipping in check mode
 
     - name: Send no updates made message to Telegram
