@@ -35,10 +35,35 @@
         msg: "Update was successful."
       when: update_result.changed  # Check if any changes were made during the update
 
-    - name: Debug before sending Telegram success message
+    - name: Send reboot required message to Telegram
+      uri:
+        url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
+        method: POST
+        body: '{{ {"chat_id": chat_id, "text": "🔄 Reboot is required for *" + ansible_hostname + "*"} | to_json }}'
+        headers:
+          Content-Type: "application/json"
+        return_content: yes  # Capture the response
+      when: reboot_required.stat.exists
+
+    - name: Check for held back updates
+      command: apt-mark showhold
+      register: held_back_updates
+      changed_when: false
+
+    - name: Send held back updates message to Telegram
+      uri:
+        url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
+        method: POST
+        body: '{{ {"chat_id": chat_id, "text": "⚠️ Updates are held back on *" + ansible_hostname + "*: " + held_back_updates.stdout | default("None") + "} | to_json }}'
+        headers:
+          Content-Type: "application/json"
+        return_content: yes  # Capture the response
+      when: held_back_updates.stdout | length > 0
+
+    - name: Debug before sending Telegram messages
       debug:
-        msg: "Attempting to send success message to Telegram"
-      when: update_result.changed
+        msg: "Attempting to send appropriate message to Telegram"
+      when: update_result.changed or not update_result.upgraded
 
     - name: Send success message to Telegram
       uri:
@@ -52,12 +77,19 @@
       when: update_result.changed
       check_mode: no  # Prevent skipping in check mode
 
-    - name: Debug Telegram success response
-      debug:
-        var: telegram_response_success
-      when: update_result.changed
+    - name: Send no updates available message to Telegram
+      uri:
+        url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
+        method: POST
+        body: '{{ {"chat_id": chat_id, "text": "ℹ️ No updates are available for *" + ansible_hostname + "*"} | to_json }}'
+        headers:
+          Content-Type: "application/json"
+        return_content: yes  # Capture the response
+      register: telegram_response_no_updates
+      when: not update_result.changed and not update_result.upgraded
+      check_mode: no  # Prevent skipping in check mode
 
-    - name: Send failure message to Telegram
+    - name: Send no updates made message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
@@ -65,6 +97,22 @@
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
-      register: telegram_response_failure
-      when: not update_result.changed
+      register: telegram_response_no_updates_made
+      when: not update_result.changed and update_result.upgraded
       check_mode: no  # Prevent skipping in check mode
+
+    - name: Debug Telegram responses
+      debug:
+        var: telegram_response_success
+      when: update_result.changed
+
+    - name: Debug Telegram no updates available response
+      debug:
+        var: telegram_response_no_updates
+      when: not update_result.changed and not update_result.upgraded
+
+    - name: Debug Telegram no updates made response
+      debug:
+        var: telegram_response_no_updates_made
+      when: not update_result.changed and update_result.upgraded
+
