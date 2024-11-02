@@ -78,6 +78,10 @@
         TZ: "Europe/Berlin"
       register: berlin_time
 
+    - name: Debug: Show captured time
+      debug:
+        var: berlin_time.stdout
+
     - name: Set message for no updates available
       set_fact:
         no_updates_message: "*{{ berlin_time.stdout }}*\n*{{ ansible_hostname }}*\nℹ️ No updates are available"
