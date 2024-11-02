@@ -2,7 +2,7 @@
 - hosts: all
   become: true
   vars_files:
-    - /root/secrets.yml
+    - /root/secrets.yml  # Original secrets file
 
   tasks:
     - name: Update apt packages
@@ -18,7 +18,7 @@
       register: reboot_required
 
     - name: Notify if reboot is required
-      ansible.builtin.debug:
+      debug:
         msg: "Reboot is required"
       when: reboot_required.stat.exists
 
@@ -27,21 +27,18 @@
         autoremove: true
 
     - name: Notify that the update process is finished
-      ansible.builtin.debug:
+      debug:
         msg: "Update process completed successfully."
 
     - name: Check if the update was successful
-      ansible.builtin.debug:
+      debug:
         msg: "Update was successful."
       when: update_result.changed  # Check if any changes were made during the update
 
-    - name: Debug telegram_token
-      ansible.builtin.debug:
-        var: telegram_token
-
-    - name: Debug chat_id
-      ansible.builtin.debug:
-        var: chat_id
+    - name: Debug before sending Telegram success message
+      debug:
+        msg: "Attempting to send success message to Telegram"
+      when: update_result.changed
 
     - name: Send success message to Telegram
       uri:
@@ -52,8 +49,19 @@
           text: "Update process completed successfully on {{ inventory_hostname }}."
         headers:
           Content-Type: "application/json"
-        status_code: 200
+        return_content: yes  # Capture the response
+      register: telegram_response_success
       when: update_result.changed
+
+    - name: Debug Telegram success response
+      debug:
+        var: telegram_response_success
+      when: update_result.changed
+
+    - name: Debug before sending Telegram failure message
+      debug:
+        msg: "Attempting to send failure message to Telegram"
+      when: not update_result.changed
 
     - name: Send failure message to Telegram
       uri:
@@ -64,52 +72,12 @@
           text: "No updates were made on {{ inventory_hostname }}."
         headers:
           Content-Type: "application/json"
-        status_code: 200
+        return_content: yes  # Capture the response
+      register: telegram_response_failure
       when: not update_result.changed
 
+    - name: Debug Telegram failure response
+      debug:
+        var: telegram_response_failure
+      when: not update_result.changed
 
-- name: Debug before sending Telegram success message
-  ansible.builtin.debug:
-    msg: "Attempting to send success message to Telegram"
-  when: update_result.changed
-
-- name: Send success message to Telegram
-  uri:
-    url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
-    method: POST
-    body:
-      chat_id: "{{ chat_id }}"
-      text: "Update process completed successfully on {{ inventory_hostname }}."
-    headers:
-      Content-Type: "application/json"
-    return_content: yes  # Capture the response
-  register: telegram_response_success
-  when: update_result.changed
-
-- name: Debug Telegram success response
-  ansible.builtin.debug:
-    var: telegram_response_success
-  when: update_result.changed
-
-- name: Debug before sending Telegram failure message
-  ansible.builtin.debug:
-    msg: "Attempting to send failure message to Telegram"
-  when: not update_result.changed
-
-- name: Send failure message to Telegram
-  uri:
-    url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
-    method: POST
-    body:
-      chat_id: "{{ chat_id }}"
-      text: "No updates were made on {{ inventory_hostname }}."
-    headers:
-      Content-Type: "application/json"
-    return_content: yes  # Capture the response
-  register: telegram_response_failure
-  when: not update_result.changed
-
-- name: Debug Telegram failure response
-  ansible.builtin.debug:
-    var: telegram_response_failure
-  when: not update_result.changed
