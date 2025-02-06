@@ -38,7 +38,11 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "*{{ ansible_hostname }}*\n🔄 Reboot is required"} | to_json }}'
+        body: |
+          {
+            "chat_id": "{{ chat_id }}",
+            "text": "*{{ ansible_hostname }}*\n🔄 Reboot is required"
+          }
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -53,7 +57,11 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "*{{ ansible_hostname }}*\n⚠️ Updates are held back: " + (held_back_updates.stdout | default("None")) + "} | to_json }}'
+        body: |
+          {
+            "chat_id": "{{ chat_id }}",
+            "text": "*{{ ansible_hostname }}*\n⚠️ Updates are held back: {{ held_back_updates.stdout | default('None') }}"
+          }
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -63,7 +71,11 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "*{{ ansible_hostname }}*\n✅ Update process completed successfully"} | to_json }}'
+        body: |
+          {
+            "chat_id": "{{ chat_id }}",
+            "text": "*{{ ansible_hostname }}*\n✅ Update process completed successfully"
+          }
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -80,7 +92,11 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": no_updates_message} | to_json }}'
+        body: |
+          {
+            "chat_id": "{{ chat_id }}",
+            "text": "{{ no_updates_message }}"
+          }
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -91,7 +107,11 @@
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: '{{ {"chat_id": chat_id, "text": "*{{ ansible_hostname }}*\n❌ No updates were made"} | to_json }}'
+        body: |
+          {
+            "chat_id": "{{ chat_id }}",
+            "text": "*{{ ansible_hostname }}*\n❌ No updates were made"
+          }
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
