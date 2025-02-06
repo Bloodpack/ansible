@@ -34,11 +34,16 @@
         msg: "Update was successful."
       when: update_result.changed  # Check if any changes were made during the update
 
+    - name: Create message for reboot required notification
+      set_fact:
+        reboot_message: "*{{ ansible_hostname }}*\n🔄 Reboot is required"
+      when: reboot_required.stat.exists
+
     - name: Send reboot required message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: "{{ {'chat_id': chat_id, 'text': '*{{ ansible_hostname }}*\n🔄 Reboot is required'} | to_json }}"
+        body: "{{ {'chat_id': chat_id, 'text': reboot_message} | to_json }}"
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -49,21 +54,31 @@
       register: held_back_updates
       changed_when: false
 
+    - name: Create message for held back updates notification
+      set_fact:
+        held_back_message: "*{{ ansible_hostname }}*\n⚠️ Updates are held back: {{ held_back_updates.stdout | default('None') }}"
+      when: held_back_updates.stdout | length > 0
+
     - name: Send held back updates message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: "{{ {'chat_id': chat_id, 'text': '*{{ ansible_hostname }}*\n⚠️ Updates are held back: ' + (held_back_updates.stdout | default('None'))} | to_json }}"
+        body: "{{ {'chat_id': chat_id, 'text': held_back_message} | to_json }}"
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
       when: held_back_updates.stdout | length > 0
 
+    - name: Create message for successful update notification
+      set_fact:
+        success_message: "*{{ ansible_hostname }}*\n✅ Update process completed successfully"
+      when: update_result.changed
+
     - name: Send success message to Telegram (when updates are installed)
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: "{{ {'chat_id': chat_id, 'text': '*{{ ansible_hostname }}*\n✅ Update process completed successfully'} | to_json }}"
+        body: "{{ {'chat_id': chat_id, 'text': success_message} | to_json }}"
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
@@ -87,11 +102,16 @@
       when: no_updates_message is defined
       check_mode: no  # Prevent skipping in check mode
 
+    - name: Create message for no updates made notification
+      set_fact:
+        no_updates_made_message: "*{{ ansible_hostname }}*\n❌ No updates were made"
+      when: not update_result.changed and held_back_updates.stdout | length > 0
+
     - name: Send no updates made message to Telegram
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
-        body: "{{ {'chat_id': chat_id, 'text': '*{{ ansible_hostname }}*\n❌ No updates were made'} | to_json }}"
+        body: "{{ {'chat_id': chat_id, 'text': no_updates_made_message} | to_json }}"
         headers:
           Content-Type: "application/json"
         return_content: yes  # Capture the response
