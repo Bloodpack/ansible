@@ -1,4 +1,3 @@
----
 - hosts: all
   become: true
   vars_files:
@@ -60,7 +59,7 @@
         return_content: yes  # Capture the response
       when: held_back_updates.stdout | length > 0
 
-    - name: Send success message to Telegram
+    - name: Send success message to Telegram (when updates are installed)
       uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
