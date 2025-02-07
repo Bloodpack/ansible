@@ -1,3 +1,14 @@
+# script to update Linux-Servers via ansible.
+# Copyright (c) 2023 Bloodpack
+# Author: Bloodpack 
+# License: GPL-3.0 license
+# Follow or contribute on GitHub here:
+# https://github.com/Bloodpack/ansible
+################################
+# VERSION: 1.3 from 07.02.2025 #
+################################
+
+
 - hosts: all
   become: true
   vars_files:
