@@ -1,3 +1,4 @@
+---
 # script to update Linux-Servers via ansible.
 # Copyright (c) 2023 Bloodpack
 # Author: Bloodpack
@@ -117,10 +118,14 @@
           {% else %}
           ℹ️ No updates are available.
           {% endif %}
+
           {% if held_back_updates.stdout | default('') | trim | length > 0 %}
-          ⚠️ Packages on hold:
+          ⚠️ Pakete zurückgehalten:
           {{ held_back_updates.stdout | trim }}
+          {% else %}
+          ⚠️ 0 Pakete zurückgehalten
           {% endif %}
+
           {% if reboot_performed | bool %}
           🔄 Server rebooted successfully.
           {% elif reboot_failed | bool %}
@@ -143,8 +148,7 @@
         status_code:
           - 200
       register: telegram_response
-      failed_when: >-
-        not (telegram_response.json.ok | default(false))
+      failed_when: not (telegram_response.json.ok | default(false))
       when: not ansible_check_mode
 
     # Report failures to Ansible Semaphore
