@@ -47,7 +47,7 @@
 
     - name: Create message for reboot required notification
       set_fact:
-        reboot_message: "*{{ ansible_hostname }}*\n🔄 Reboot is required"
+        reboot_message: "*{{ ansible_facts['hostname'] }}*\n🔄 Reboot is required"
       when: reboot_required.stat.exists
 
     - name: Send reboot required message to Telegram
@@ -67,7 +67,7 @@
 
     - name: Create message for held back updates notification
       set_fact:
-        held_back_message: "*{{ ansible_hostname }}*\n⚠️ Updates are held back: {{ held_back_updates.stdout | default('None') }}"
+        held_back_message: "*{{ ansible_facts['hostname'] }}*\n⚠️ Updates are held back: {{ held_back_updates.stdout | default('None') }}"
       when: held_back_updates.stdout | length > 0
 
     - name: Send held back updates message to Telegram
@@ -82,7 +82,7 @@
 
     - name: Create message for successful update notification
       set_fact:
-        success_message: "*{{ ansible_hostname }}*\n✅ Update process completed successfully"
+        success_message: "*{{ ansible_facts['hostname'] }}*\n✅ Update process completed successfully"
       when: update_result.changed
 
     - name: Send success message to Telegram (when updates are installed)
@@ -99,7 +99,7 @@
 
     - name: Set message for no updates available
       set_fact:
-        no_updates_message: "*{{ ansible_hostname }}*\nℹ️ No updates are available"
+        no_updates_message: "*{{ ansible_facts['hostname'] }}*\nℹ️ No updates are available"
       when: not update_result.changed and held_back_updates.stdout | length == 0
 
     - name: Send no updates available message to Telegram
@@ -115,7 +115,7 @@
 
     - name: Create message for no updates made notification
       set_fact:
-        no_updates_made_message: "*{{ ansible_hostname }}*\n❌ No updates were made"
+        no_updates_made_message: "*{{ ansible_facts['hostname'] }}*\n❌ No updates were made"
       when: not update_result.changed and held_back_updates.stdout | length > 0
 
     - name: Send no updates made message to Telegram
