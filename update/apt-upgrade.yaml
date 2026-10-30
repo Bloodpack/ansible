@@ -1,131 +1,132 @@
 # script to update Linux-Servers via ansible.
 # Copyright (c) 2023 Bloodpack
-# Author: Bloodpack 
+# Author: Bloodpack
 # License: GPL-3.0 license
 # Follow or contribute on GitHub here:
 # https://github.com/Bloodpack/ansible
 ################################
-# VERSION: 1.3 from 07.02.2025 #
+# VERSION: 1.4 from 30.10.2026 #
 ################################
 
-
-- hosts: all
+- name: Update Linux Servers
+  hosts: all
   become: true
+
   vars_files:
     - /root/secrets.yml  # Original secrets file
 
   tasks:
     - name: Update apt packages
-      apt:
+      ansible.builtin.apt:
         force_apt_get: true
         upgrade: yes  # Perform a regular upgrade
         update_cache: true
-      register: update_result  # Register the result of the update task
+      register: update_result
 
     - name: Check if a reboot is required
-      stat:
+      ansible.builtin.stat:
         path: /var/run/reboot-required
       register: reboot_required
 
     - name: Notify if reboot is required
-      debug:
+      ansible.builtin.debug:
         msg: "Reboot is required"
       when: reboot_required.stat.exists
 
     - name: Remove dependencies that are no longer required
-      apt:
+      ansible.builtin.apt:
         autoremove: true
 
     - name: Notify that the update process is finished
-      debug:
+      ansible.builtin.debug:
         msg: "Update process completed successfully."
 
     - name: Check if the update was successful
-      debug:
+      ansible.builtin.debug:
         msg: "Update was successful."
-      when: update_result.changed  # Check if any changes were made during the update
+      when: update_result.changed
 
     - name: Create message for reboot required notification
-      set_fact:
+      ansible.builtin.set_fact:
         reboot_message: "*{{ ansible_facts['hostname'] }}*\n🔄 Reboot is required"
       when: reboot_required.stat.exists
 
     - name: Send reboot required message to Telegram
-      uri:
+      ansible.builtin.uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
         body: "{{ {'chat_id': chat_id, 'text': reboot_message} | to_json }}"
         headers:
           Content-Type: "application/json"
-        return_content: yes  # Capture the response
+        return_content: yes
       when: reboot_required.stat.exists
 
     - name: Check for held back updates
-      command: apt-mark showhold
+      ansible.builtin.command: apt-mark showhold
       register: held_back_updates
       changed_when: false
 
     - name: Create message for held back updates notification
-      set_fact:
+      ansible.builtin.set_fact:
         held_back_message: "*{{ ansible_facts['hostname'] }}*\n⚠️ Updates are held back: {{ held_back_updates.stdout | default('None') }}"
       when: held_back_updates.stdout | length > 0
 
     - name: Send held back updates message to Telegram
-      uri:
+      ansible.builtin.uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
         body: "{{ {'chat_id': chat_id, 'text': held_back_message} | to_json }}"
         headers:
           Content-Type: "application/json"
-        return_content: yes  # Capture the response
+        return_content: yes
       when: held_back_updates.stdout | length > 0
 
     - name: Create message for successful update notification
-      set_fact:
+      ansible.builtin.set_fact:
         success_message: "*{{ ansible_facts['hostname'] }}*\n✅ Update process completed successfully"
       when: update_result.changed
 
     - name: Send success message to Telegram (when updates are installed)
-      uri:
+      ansible.builtin.uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
         body: "{{ {'chat_id': chat_id, 'text': success_message} | to_json }}"
         headers:
           Content-Type: "application/json"
-        return_content: yes  # Capture the response
+        return_content: yes
       register: telegram_response_success
       when: update_result.changed
-      check_mode: no  # Prevent skipping in check mode
+      check_mode: no
 
     - name: Set message for no updates available
-      set_fact:
+      ansible.builtin.set_fact:
         no_updates_message: "*{{ ansible_facts['hostname'] }}*\nℹ️ No updates are available"
       when: not update_result.changed and held_back_updates.stdout | length == 0
 
     - name: Send no updates available message to Telegram
-      uri:
+      ansible.builtin.uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
         body: "{{ {'chat_id': chat_id, 'text': no_updates_message} | to_json }}"
         headers:
           Content-Type: "application/json"
-        return_content: yes  # Capture the response
+        return_content: yes
       when: no_updates_message is defined
-      check_mode: no  # Prevent skipping in check mode
+      check_mode: no
 
     - name: Create message for no updates made notification
-      set_fact:
+      ansible.builtin.set_fact:
         no_updates_made_message: "*{{ ansible_facts['hostname'] }}*\n❌ No updates were made"
       when: not update_result.changed and held_back_updates.stdout | length > 0
 
-    - name: Send no updates made message to Telegram
-      uri:
+    - name: Send no updates made notification to Telegram
+      ansible.builtin.uri:
         url: "https://api.telegram.org/bot{{ telegram_token }}/sendMessage"
         method: POST
         body: "{{ {'chat_id': chat_id, 'text': no_updates_made_message} | to_json }}"
         headers:
           Content-Type: "application/json"
-        return_content: yes  # Capture the response
+        return_content: yes
       register: telegram_response_no_updates_made
       when: not update_result.changed and held_back_updates.stdout | length > 0
-      check_mode: no  # Prevent skipping in check mode
+      check_mode: no
