@@ -120,10 +120,10 @@
           {% endif %}
 
           {% if held_back_updates.stdout | default('') | trim | length > 0 %}
-          ⚠️ Pakete zurückgehalten:
+          ⚠️ Updates on hold:
           {{ held_back_updates.stdout | trim }}
           {% else %}
-          ⚠️ 0 Pakete zurückgehalten
+          ⚠️ 0 Updates on hold
           {% endif %}
 
           {% if reboot_performed | bool %}
